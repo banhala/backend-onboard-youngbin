@@ -18,8 +18,6 @@ poetry run python manage.py migrate
 poetry run python manage.py runserver
 ```
 
-**API Documentation**: http://localhost:8000/swagger
-
 ### Docker 환경 (MySQL)
 
 ```bash
@@ -27,17 +25,29 @@ poetry run python manage.py runserver
 docker-compose up --build
 ```
 
-**API Server**: http://localhost:8000
+**API Server**: http://localhost:8000  
 **API Documentation**: http://localhost:8000/swagger
+
+## 📊 ERD
+
+```mermaid
+erDiagram
+    Member {
+        bigint id PK
+        varchar email UK
+        varchar username
+        varchar password 
+    }
+```
 
 ## 📋 기능 요구사항
 
 ### 유저 (Member)
 
-- [ ] **회원가입** (`POST /auth/signup/`)
-  - [ ] 사용자명, 이메일, 비밀번호로 회원가입
-  - [ ] 이메일 형식: `??@??.??` 패턴 검증
-  - [ ] 비밀번호 정책: 12자 이상, 대문자/소문자/특수문자 포함
+- [X] **회원가입** (`POST /auth/signup/`)
+  - [X] 사용자명, 이메일, 비밀번호로 회원가입
+  - [X] 이메일 형식: `??@??.??` 패턴 검증
+  - [X] 비밀번호 정책: 12자 이상, 대문자/소문자/특수문자 포함
 - [ ] **로그인** (`POST /auth/signin/`)
   - [ ] 이메일과 비밀번호로 인증
   - [ ] 토큰 발급 및 반환

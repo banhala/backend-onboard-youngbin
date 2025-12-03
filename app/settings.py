@@ -148,7 +148,8 @@ AUTH_USER_MODEL = "member.Member"
 REST_FRAMEWORK = {
     "EXCEPTION_HANDLER": ("common.exception_handler.custom_exception_handler"),
     "DEFAULT_AUTHENTICATION_CLASSES": [
-        "authentication.infrastructure.custom_jwt_authentication.CustomJWTAuthentication",
+        "authentication.infrastructure.custom_jwt_authentication."
+        "CustomJWTAuthentication",
     ],
     "DEFAULT_PERMISSION_CLASSES": [
         "rest_framework.permissions.IsAuthenticated",
