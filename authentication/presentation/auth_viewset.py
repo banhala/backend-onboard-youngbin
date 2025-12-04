@@ -57,10 +57,8 @@ class AuthViewSet(GenericViewSet):
     )
     @action(detail=False, methods=["post"], url_path="signup")
     def signup(self, request):
-        # DRF Serializer로 validation
         serializer = SignupRequestDTO(data=request.data)
         if not serializer.is_valid():
-            # DRF validation 에러를 커스텀 에러로 변환
             errors = serializer.errors
             if "email" in errors:
                 return Response(
