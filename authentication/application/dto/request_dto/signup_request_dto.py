@@ -2,7 +2,6 @@ from rest_framework import serializers
 
 
 class SignupRequestDTO(serializers.Serializer):
-    """회원가입 요청 DTO"""
 
     username = serializers.CharField(
         min_length=2,

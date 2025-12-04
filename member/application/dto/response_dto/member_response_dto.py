@@ -4,7 +4,6 @@ from member.model.member import Member
 
 
 class MemberResponseDTO(serializers.ModelSerializer):
-    """회원 응답 DTO"""
 
     class Meta:
         model = Member
