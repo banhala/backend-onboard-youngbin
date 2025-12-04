@@ -7,7 +7,6 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.viewsets import GenericViewSet
 
-from common.swagger_utils import pydantic_to_openapi_schema
 from member.application.dto.response_dto.member_response_dto import MemberResponseDTO
 from member.domain.member_repository import MemberRepository
 from member.domain.member_service import MemberService
@@ -28,7 +27,7 @@ class MemberViewSet(GenericViewSet):
         operation_summary="내 정보 조회",
         operation_description="인증된 사용자 정보 조회 (JWT 토큰 필요)",
         responses={
-            200: pydantic_to_openapi_schema(MemberResponseDTO),
+            200: MemberResponseDTO,
             401: "Unauthorized",
             404: "Not Found",
         },
@@ -44,14 +43,9 @@ class MemberViewSet(GenericViewSet):
 
             member = self.member_service.get_member_by_id(request.user.id)
 
-            return Response(
-                {
-                    "id": member.id,
-                    "email": member.email,
-                    "username": member.username,
-                },
-                status=status.HTTP_200_OK,
-            )
+            # ModelSerializer로 직렬화
+            serializer = MemberResponseDTO(member)
+            return Response(serializer.data, status=status.HTTP_200_OK)
 
         except Exception as e:
             logger.error(

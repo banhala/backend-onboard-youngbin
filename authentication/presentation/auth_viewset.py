@@ -2,7 +2,6 @@ import logging
 
 from django.conf import settings
 from drf_yasg.utils import swagger_auto_schema
-from pydantic import ValidationError
 from rest_framework import status
 from rest_framework.decorators import action
 from rest_framework.permissions import AllowAny
@@ -34,7 +33,6 @@ from authentication.exception.auth_invalid_password_exception import (
     AuthInvalidPasswordException,
 )
 from authentication.infrastructure.redis_token_storage import RedisTokenStorage
-from common.swagger_utils import pydantic_to_openapi_schema
 from member.domain.member_repository import MemberRepository
 
 logger = logging.getLogger(__name__)
@@ -51,37 +49,57 @@ class AuthViewSet(GenericViewSet):
     @swagger_auto_schema(
         operation_summary="회원가입 API",
         operation_description="사용자 회원가입을 처리합니다.",
-        request_body=pydantic_to_openapi_schema(SignupRequestDTO),
+        request_body=SignupRequestDTO,
         responses={
-            201: pydantic_to_openapi_schema(SignupResponseDTO),
+            201: SignupResponseDTO,
             400: "Bad Request",
         },
     )
     @action(detail=False, methods=["post"], url_path="signup")
     def signup(self, request):
+        # DRF Serializer로 validation
+        serializer = SignupRequestDTO(data=request.data)
+        if not serializer.is_valid():
+            # DRF validation 에러를 커스텀 에러로 변환
+            errors = serializer.errors
+            if "email" in errors:
+                return Response(
+                    {
+                        "message": "유효하지 않은 이메일 형식입니다.",
+                        "code": "AUTH_INVALID_EMAIL",
+                    },
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+            if "password" in errors:
+                password_errors = errors["password"]
+                if any("at least" in str(err).lower() for err in password_errors):
+                    return Response(
+                        {
+                            "message": "비밀번호는 최소 12자 이상이어야 합니다.",
+                            "code": "AUTH_INVALID_PASSWORD",
+                        },
+                        status=status.HTTP_400_BAD_REQUEST,
+                    )
+            # 기타 validation 에러
+            first_field = list(errors.keys())[0]
+            first_error = errors[first_field][0]
+            return Response(
+                {"error": f"{first_field}: {first_error}"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
         try:
-            dto = SignupRequestDTO(**request.data)
-            self.auth_service.register(str(dto.email), dto.username, dto.password)
+            self.auth_service.register(
+                email=serializer.validated_data["email"],
+                username=serializer.validated_data["username"],
+                password=serializer.validated_data["password"],
+            )
 
             return Response(
                 {"message": "회원가입이 완료되었습니다."},
                 status=status.HTTP_201_CREATED,
             )
 
-        except ValidationError as e:
-            logger.warning(f"회원가입 실패 - DTO 검증 오류: {str(e)}")
-            errors = e.errors()
-            if errors:
-                first_error = errors[0]
-                field = first_error.get("loc", [""])[0]
-                msg = first_error.get("msg", "입력값이 올바르지 않습니다.")
-                return Response(
-                    {"error": f"{field}: {msg}"}, status=status.HTTP_400_BAD_REQUEST
-                )
-            return Response(
-                {"error": "입력값이 올바르지 않습니다."},
-                status=status.HTTP_400_BAD_REQUEST,
-            )
         except (
             AuthInvalidEmailException,
             AuthInvalidPasswordException,
@@ -101,17 +119,40 @@ class AuthViewSet(GenericViewSet):
     @swagger_auto_schema(
         operation_summary="로그인 API",
         operation_description="사용자 로그인을 처리합니다.",
-        request_body=pydantic_to_openapi_schema(LoginRequestDTO),
+        request_body=LoginRequestDTO,
         responses={
-            200: pydantic_to_openapi_schema(LoginResponseDTO),
+            200: LoginResponseDTO,
             401: "Unauthorized",
         },
     )
     @action(detail=False, methods=["post"], url_path="signin")
     def signin(self, request):
+        # DRF Serializer로 validation
+        serializer = LoginRequestDTO(data=request.data)
+        if not serializer.is_valid():
+            # DRF validation 에러를 커스텀 에러로 변환
+            errors = serializer.errors
+            if "email" in errors or "password" in errors:
+                return Response(
+                    {
+                        "message": "이메일과 비밀번호를 입력해주세요.",
+                        "code": "AUTH_INVALID_INPUT",
+                    },
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+            # 기타 validation 에러
+            first_field = list(errors.keys())[0]
+            first_error = errors[first_field][0]
+            return Response(
+                {"error": f"{first_field}: {first_error}"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
         try:
-            dto = LoginRequestDTO(**request.data)
-            member = self.auth_service.login(str(dto.email), dto.password)
+            member = self.auth_service.login(
+                email=serializer.validated_data["email"],
+                password=serializer.validated_data["password"],
+            )
 
             refresh = RefreshToken.for_user(member)
             access_token = str(refresh.access_token)
@@ -139,20 +180,6 @@ class AuthViewSet(GenericViewSet):
                 status=status.HTTP_200_OK,
             )
 
-        except ValidationError as e:
-            logger.warning(f"로그인 실패 - DTO 검증 오류: {str(e)}")
-            errors = e.errors()
-            if errors:
-                first_error = errors[0]
-                field = first_error.get("loc", [""])[0]
-                msg = first_error.get("msg", "입력값이 올바르지 않습니다.")
-                return Response(
-                    {"detail": f"{field}: {msg}"}, status=status.HTTP_401_UNAUTHORIZED
-                )
-            return Response(
-                {"detail": "입력값이 올바르지 않습니다."},
-                status=status.HTTP_401_UNAUTHORIZED,
-            )
         except (AuthInvalidEmailException, AuthAuthenticationException) as e:
             logger.warning(
                 f"로그인 실패 - 인증 오류: {e.detail.get('message', str(e))}"

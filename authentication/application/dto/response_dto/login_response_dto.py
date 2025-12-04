@@ -1,23 +1,15 @@
-from __future__ import annotations
-
-from pydantic import BaseModel, Field
+from rest_framework import serializers
 
 
-class LoginResponseDTO(BaseModel):
+class LoginDataDTO(serializers.Serializer):
+    """로그인 데이터 DTO"""
 
-    message: str = Field(description="응답 메시지", examples=["success"])
-    data: LoginDataDTO = Field(description="로그인 데이터")
-
-    model_config = {
-        "frozen": True,
-    }
+    token = serializers.CharField(help_text="JWT Access Token")
+    user_id = serializers.IntegerField(help_text="사용자 ID")
 
 
-class LoginDataDTO(BaseModel):
+class LoginResponseDTO(serializers.Serializer):
+    """로그인 응답 DTO"""
 
-    token: str = Field(description="JWT Access Token")
-    user_id: int = Field(description="사용자 ID")
-
-    model_config = {
-        "frozen": True,
-    }
+    message = serializers.CharField(help_text="응답 메시지")
+    data = LoginDataDTO(help_text="로그인 데이터")
