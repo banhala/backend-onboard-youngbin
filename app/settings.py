@@ -39,6 +39,10 @@ INSTALLED_APPS = [
     "drf_yasg",
     "member.apps.MemberConfig",
     "authentication.apps.AuthenticationConfig",
+    "wish_item_box.apps.WishItemBoxConfig",
+    "wish_item.apps.WishItemConfig",
+    "product.apps.ProductConfig",
+    "app",
 ]
 
 MIDDLEWARE = [
