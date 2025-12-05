@@ -43,7 +43,12 @@ class CustomJWTAuthentication(BaseAuthentication):
             return (user, validated_token)
 
         except (InvalidToken, TokenError) as e:
-            raise AuthenticationFailed(f"유효하지 않은 토큰입니다: {str(e)}")
+            # 토큰 만료 여부 확인
+            error_str = str(e)
+            if "expired" in error_str.lower():
+                raise AuthenticationFailed("토큰이 만료되었습니다.")
+            else:
+                raise AuthenticationFailed("유효하지 않은 토큰입니다.")
         except AuthenticationFailed:
             raise
         except Exception:
