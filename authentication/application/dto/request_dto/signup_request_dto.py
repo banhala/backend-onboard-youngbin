@@ -1,15 +1,21 @@
-from rest_framework import serializers
+from __future__ import annotations
+
+from pydantic import BaseModel, Field
 
 
-class SignupRequestDTO(serializers.Serializer):
+class SignupRequestDTO(BaseModel):
 
-    username = serializers.CharField(
-        min_length=2,
-        max_length=30,
-        help_text="사용자명",
+    username: str = Field(
+        description="사용자명",
+        examples=["youngbin"],
     )
-    email = serializers.EmailField(help_text="이메일")
-    password = serializers.CharField(
-        min_length=12,
-        help_text="비밀번호",
+    email: str = Field(description="이메일", examples=["example@a-bly.com"])
+    password: str = Field(
+        description="비밀번호",
+        examples=["Password1234!"],
     )
+
+    model_config = {
+        "frozen": True,
+        "str_strip_whitespace": True,
+    }

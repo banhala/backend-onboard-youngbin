@@ -26,8 +26,6 @@ urlpatterns = [
     ),
     path("auth/", include("authentication.urls")),
     path("members/", include("member.urls")),
-    path("wish-item-boxes/", include("wish_item_box.urls")),
-    path("wish-items/", include("wish_item.urls")),
 ]
 
 handler500 = "common.views.server_error"

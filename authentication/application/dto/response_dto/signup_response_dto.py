@@ -1,6 +1,12 @@
-from rest_framework import serializers
+from __future__ import annotations
+
+from pydantic import BaseModel, Field
 
 
-class SignupResponseDTO(serializers.Serializer):
+class SignupResponseDTO(BaseModel):
 
-    message = serializers.CharField(help_text="응답 메시지")
+    message: str = Field(description="응답 메시지")
+
+    model_config = {
+        "frozen": True,
+    }

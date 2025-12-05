@@ -1,11 +1,14 @@
-from rest_framework import serializers
+from __future__ import annotations
 
-from member.model.member import Member
+from pydantic import BaseModel, EmailStr, Field
 
 
-class MemberResponseDTO(serializers.ModelSerializer):
+class MemberResponseDTO(BaseModel):
 
-    class Meta:
-        model = Member
-        fields = ["id", "email", "username"]
-        read_only_fields = ["id"]
+    id: int = Field(description="회원 ID")
+    email: EmailStr = Field(description="이메일")
+    username: str = Field(description="사용자명")
+
+    model_config = {
+        "frozen": True,
+    }
