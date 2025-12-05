@@ -32,11 +32,44 @@ docker-compose up --build
 
 ```mermaid
 erDiagram
+    Member ||--o{ WishItemBox : has
+    WishItemBox ||--o{ WishItem : contains
+    Product ||--o{ WishItem : referenced_by
+
     Member {
         bigint id PK
         varchar email UK
         varchar username
-        varchar password 
+        varchar password
+        datetime created_at
+        datetime updated_at
+    }
+
+    WishItemBox {
+        bigint id PK
+        bigint member_id FK
+        varchar name
+        datetime created_at
+        datetime updated_at
+    }
+
+    WishItem {
+        bigint id PK
+        bigint wish_item_box_id FK
+        bigint product_id
+        varchar product_name
+        int product_price
+        datetime created_at
+        datetime updated_at
+    }
+
+    Product {
+        bigint id PK
+        varchar name
+        varchar thumbnail
+        int price
+        datetime created_at
+        datetime updated_at
     }
 ```
 
